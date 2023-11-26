@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Room</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        #chat-container {
+            max-width: 400px;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+        }
+
+        #messages {
+            list-style: none;
+            padding: 0;
+        }
+
+        .user-message {
+            margin: 5px 0;
+            background-color: #007bff;
+            border-radius: 5px;
+            padding: 10px;
+            color: #fff;
+        }
+
+        .other-person-message {
+            margin: 5px 0;
+            background-color: #4caf50;
+            border-radius: 5px;
+            padding: 10px;
+            color: #fff;
+        }
+
+        #chatbox {
+            display: flex;
+        }
+
+        #chatbox textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        #chatbox input[type="submit"] {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        #chatbox input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div id="chat-container">
+    <h1>Welcome to Chat Room</h1>
+    <ul id="messages"></ul>
+    <form id="chatbox">
+        <textarea placeholder="Type your message..."></textarea>
+        <input type="submit" value="Send" />
+
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>$(function () {
+    var socket = null;
+    var msgBox = $("#chatbox textarea");
+    var messages = $("#messages");
+    var messageSentFlag = false;
+
+    $("#chatbox").submit(function () {
+        if (!msgBox.val()) return false;
+        if (!socket) {
+            alert("Error: There is no socket connection.");
+            return false;
+        }
+
+        var userMessage = msgBox.val();
+        messages.append($("<li class='user-message'>").text(userMessage));
+
+        messageSentFlag = true;
+
+        socket.send(userMessage);
+
+        msgBox.val("");
+        return false;
+    });
+
+    if (!window["WebSocket"]) {
+        alert("Error: Your browser does not support web sockets.")
+    } else {
+        socket = new WebSocket("ws://{{.Host}}/room");
+        socket.onclose = function () {
+            alert("Connection has been closed.");
+        }
+        socket.onmessage = function (e) {
+            var otherPersonMessage = e.data;
+
+            if (!messageSentFlag) {
+                messages.append($("<li class='other-person-message'>").text(otherPersonMessage));
+            }
+
+            messageSentFlag = false;
+        }
+    }
+});
+
+</script>
+</body>
+</html>
